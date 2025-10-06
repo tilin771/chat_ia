@@ -75,29 +75,36 @@ def generar_resumen_contexto():
 
 def manejar_ticket(user_input):
     """Procesa un mensaje cuando estamos en modo ticket"""
-    mostrar_respuesta("📩 Continuemos con la creación del ticket...")
-
     # Solo en la primera llamada al ticket
-    if "ticket_iniciado" not in st.session_state:
+    if "ticket_iniciado" not in st.session_state or not st.session_state["ticket_iniciado"]:
         st.session_state["ticket_iniciado"] = True
 
         # Generar resumen de la conversación hasta este punto
         resumen = generar_resumen_contexto()
 
-        # Llamar a run_ticketing con el contexto
-        ticket_texto = run_ticketing(resumen, st.session_state["session_id"])
-        
-        try:
-            ticket_json = json.loads(ticket_texto)
-            ticket_redactado = ticket_json.get("ticketText", ticket_texto)
-        except json.JSONDecodeError:
-            ticket_redactado = ticket_texto
+        # 🌀 Mostrar la respuesta del ticket en streaming
+        with st.chat_message("assistant"):
+            response_placeholder = st.empty()
+            full_response = ""
+            with st.spinner("Generando ticket automáticamente..."):
+                for chunk in run_ticketing(resumen, st.session_state["session_id"]):
+                    full_response += chunk
+                    response_placeholder.markdown(full_response)
 
-        mostrar_respuesta(f"🎫 Ticket generado automáticamente:\n\n{ticket_redactado}")
+        # Guardar en el historial
+        st.session_state["messages"].append({"role": "assistant", "content": full_response})
+
     else:
-        # Para mensajes posteriores en modo ticket, puedes seguir agregando al ticket o instrucciones
-        run_ticketing(user_input, st.session_state["session_id"])
-        mostrar_respuesta("✏️ Continúa agregando información al ticket...")
+        # Para mensajes posteriores en modo ticket
+        with st.chat_message("assistant"):
+            response_placeholder = st.empty()
+            full_response = ""
+            with st.spinner("Actualizando ticket..."):
+                for chunk in run_ticketing(user_input, st.session_state["session_id"]):
+                    full_response += chunk
+                    response_placeholder.markdown(full_response)
+
+        st.session_state["messages"].append({"role": "assistant", "content": full_response})
         
 
 
@@ -118,14 +125,11 @@ def manejar_accion(decision, user_input):
                     if "create" in texto:
                         st.session_state["modo_ticket"] = True
                         manejar_ticket(user_input)  
-                        st.markdown("🎫 Se ha activado el agente de tickets. Vamos a crear un ticket para tu solicitud.")
                         return
 
                     full_response += partial_response
                     response_placeholder.markdown(full_response)
 
-
-            # Mostrar mensaje de confirmación adicional
             full_response += f"\n\n**{decision.get('confirmationMessage', '')}**"
             response_placeholder.markdown(full_response)
 
