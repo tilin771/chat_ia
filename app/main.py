@@ -86,7 +86,7 @@ def manejar_ticket(user_input):
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
             full_response = ""
-            with st.spinner("Generando ticket automáticamente..."):
+            with st.spinner("Procesando ticket automáticamente..."):
                 for chunk in run_ticketing(resumen, st.session_state["session_id"]):
                     full_response += chunk
                     response_placeholder.markdown(full_response)
@@ -138,7 +138,6 @@ def manejar_accion(decision, user_input):
     elif accion == "create_ticket":
         st.session_state["modo_ticket"] = True
         manejar_ticket(user_input)  
-        mostrar_respuesta("Se ha activado el agente de tickets. Vamos a crear un ticket para tu solicitud.")
 
     else:
         full_response = decision.get("userResponse", "")
