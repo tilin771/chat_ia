@@ -17,6 +17,19 @@ st.title("🤖 Chatbot soporte Autoline con IA")
 # Funciones auxiliares
 # ----------------------
 
+def generar_contexto_kb(max_ultimos=5):
+    """
+    Genera un contexto acumulado de los últimos mensajes de usuario
+    y asistente para mejorar las consultas a la KB.
+    """
+    contexto = ""
+    ultimos_mensajes = st.session_state["messages"][-max_ultimos:]
+    for msg in ultimos_mensajes:
+        rol = "Usuario" if msg["role"] == "user" else "Asistente"
+        contexto += f"{rol}: {msg['content']}\n"
+    return contexto
+
+
 def load_system_prompt(file_path="./data/system_prompt.txt"):
     """Carga el prompt del sistema desde un archivo"""
     with open(file_path, "r", encoding="utf-8") as f:
@@ -115,11 +128,13 @@ def manejar_accion(decision, user_input):
     accion = decision.get("action", "")
 
     if accion == "query_kb":
+        contexto = generar_contexto_kb(max_ultimos=5)  
+        consulta_con_contexto = f"{contexto}\nPregunta del usuario: {user_input}"
         full_response = ""
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
             with st.spinner("Consultando base de conocimiento..."):
-                for partial_response in consultar_kb_streaming(user_input, prioridad=7):
+                for partial_response in consultar_kb_streaming(user_input,consulta_con_contexto, prioridad=7):
                     texto = partial_response.strip()
                     
                     if "create" in texto:
