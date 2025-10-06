@@ -131,34 +131,40 @@ def manejar_accion(decision, user_input):
         contexto = generar_contexto_kb(max_ultimos=5)  
         consulta_con_contexto = f"{contexto}\nPregunta del usuario: {user_input}"
         full_response = ""
+        
+        # Abrimos el mensaje del asistente para el streaming
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
             with st.spinner("Consultando base de conocimiento..."):
-                for partial_response in consultar_kb_streaming(user_input,consulta_con_contexto, prioridad=7):
+                for partial_response in consultar_kb_streaming(user_input, consulta_con_contexto, prioridad=7):
                     texto = partial_response.strip()
                     
                     if "create" in texto:
-                        st.session_state["modo_ticket"] = True
-                        manejar_ticket(user_input)  
-                        return
+                        response_placeholder.empty()
+                        break 
 
                     full_response += partial_response
                     response_placeholder.markdown(full_response)
+                else:
+                    # Este else se ejecuta SOLO si el bucle terminó normalmente (sin break)
+                    full_response += f"\n\n**{decision.get('confirmationMessage', '')}**"
+                    response_placeholder.markdown(full_response)
+                    st.session_state["messages"].append({"role": "assistant", "content": full_response})
+                    return  # Fin normal
 
-            full_response += f"\n\n**{decision.get('confirmationMessage', '')}**"
-            response_placeholder.markdown(full_response)
 
-        st.session_state["messages"].append({"role": "assistant", "content": full_response})
+        st.session_state["modo_ticket"] = True
+        manejar_ticket(user_input)  
+        return
 
     elif accion == "create_ticket":
         st.session_state["modo_ticket"] = True
-        manejar_ticket(user_input)  
+        manejar_ticket(user_input)
 
     else:
         full_response = decision.get("userResponse", "")
         mostrar_respuesta(full_response)
 
-    # Actualizar estado resumido
     st.session_state["ultimo_estado"] = f"Estado: {decision.get('status', '')}, Paso siguiente: {decision.get('nextStep', '')}"
 
 
