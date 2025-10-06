@@ -15,8 +15,9 @@ def consultar_kb_streaming(input_text, contexto, prioridad=7):
         "- Mantén la respuesta clara, directa y profesional.\n"
         "Instrucciones obligatorias:\n"
         "- Si encuentras información relevante en la base de conocimiento, respóndela siguiendo el estilo y formato indicados.\n"
-        "- Si NO hay información relevante, responde *únicamente* con la palabra exacta: create_ticket\n"
-        "- No agregues explicaciones, frases adicionales, saludos, ni justificaciones si respondes create_ticket.\n"
+        "- Si NO hay información relevante o la información no es útil para resolver la consulta, responde *únicamente* con la palabra exacta: create_ticket\n"
+        "- Está terminantemente prohibido escribir cualquier otra cosa además de create_ticket en ese caso. No expliques, no des contexto, no sugieras nada.\n"
+        "- Si decides responder create_ticket, esa palabra debe ser la ÚNICA salida del modelo.\n"
     )
 
 
