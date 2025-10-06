@@ -1,11 +1,13 @@
 import os
-from boto3.session import Session
+import boto3
 
 KB_ID = "D1TTDMUGC6"
 MODEL_ARN = "us.amazon.nova-pro-v1:0"
 REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
-PROFILE_NAME = "699541216231_IA_Dev"
-session = Session(profile_name=PROFILE_NAME, region_name=REGION)
+
+# Crear sesión usando variables de entorno AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY
+session = boto3.Session(region_name=REGION)
+
 bedrock_agent_client = session.client("bedrock-agent-runtime")
 
 AGENT_ARN = "arn:aws:bedrock:us-east-1:699541216231:agent/UT8RWCB5UB"
