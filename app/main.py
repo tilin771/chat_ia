@@ -86,37 +86,26 @@ def generar_resumen_contexto():
     return resumen
 
 
-def manejar_ticket(user_input):
+def manejar_ticket(user_input, response_placeholder=None):
     """Procesa un mensaje cuando estamos en modo ticket"""
-    # Solo en la primera llamada al ticket
     if "ticket_iniciado" not in st.session_state or not st.session_state["ticket_iniciado"]:
         st.session_state["ticket_iniciado"] = True
-
-        # Generar resumen de la conversación hasta este punto
         resumen = generar_resumen_contexto()
-
-        # 🌀 Mostrar la respuesta del ticket en streaming
-        with st.chat_message("assistant"):
-            response_placeholder = st.empty()
-            full_response = ""
-            with st.spinner("Procesando ticket automáticamente..."):
-                for chunk in run_ticketing(resumen, st.session_state["session_id"]):
-                    full_response += chunk
-                    response_placeholder.markdown(full_response)
-
-        # Guardar en el historial
+        full_response = ""
+        placeholder = response_placeholder or st.empty()
+        with st.spinner("Procesando ticket automáticamente..."):
+            for chunk in run_ticketing(resumen, st.session_state["session_id"]):
+                full_response += chunk
+                placeholder.markdown(full_response)
+        # Guardar en historial
         st.session_state["messages"].append({"role": "assistant", "content": full_response})
-
     else:
-        # Para mensajes posteriores en modo ticket
-        with st.chat_message("assistant"):
-            response_placeholder = st.empty()
-            full_response = ""
-            with st.spinner("Actualizando ticket..."):
-                for chunk in run_ticketing(user_input, st.session_state["session_id"]):
-                    full_response += chunk
-                    response_placeholder.markdown(full_response)
-
+        full_response = ""
+        placeholder = response_placeholder or st.empty()
+        with st.spinner("Actualizando ticket..."):
+            for chunk in run_ticketing(user_input, st.session_state["session_id"]):
+                full_response += chunk
+                placeholder.markdown(full_response)
         st.session_state["messages"].append({"role": "assistant", "content": full_response})
         
 
@@ -124,7 +113,6 @@ def manejar_ticket(user_input):
 
 
 def manejar_accion(decision, user_input):
-    """Procesa la acción devuelta por el supervisor"""
     accion = decision.get("action", "")
 
     if accion == "query_kb":
@@ -132,7 +120,7 @@ def manejar_accion(decision, user_input):
         consulta_con_contexto = f"{contexto}\nPregunta del usuario: {user_input}"
         full_response = ""
         
-        # Abrimos el mensaje del asistente para el streaming
+        # ✅ Un solo mensaje, un solo placeholder
         with st.chat_message("assistant"):
             response_placeholder = st.empty()
             with st.spinner("Consultando base de conocimiento..."):
@@ -140,30 +128,26 @@ def manejar_accion(decision, user_input):
                     texto = partial_response.strip()
                     
                     if "create" in texto:
-                        response_placeholder.empty()
-                        break 
+                        st.session_state["modo_ticket"] = True
+                        # ✅ Reutilizamos el mismo placeholder → "reemplaza" visualmente
+                        manejar_ticket(user_input, response_placeholder=response_placeholder)
+                        return  # Salimos: todo ya se mostró en el mismo bloque
 
                     full_response += partial_response
                     response_placeholder.markdown(full_response)
-                else:
-                    # Este else se ejecuta SOLO si el bucle terminó normalmente (sin break)
-                    full_response += f"\n\n**{decision.get('confirmationMessage', '')}**"
-                    response_placeholder.markdown(full_response)
-                    st.session_state["messages"].append({"role": "assistant", "content": full_response})
-                    return  # Fin normal
 
-
-        st.session_state["modo_ticket"] = True
-        manejar_ticket(user_input)  
-        return
+            # Si llegamos aquí, no se activó el ticket
+            full_response += f"\n\n**{decision.get('confirmationMessage', '')}**"
+            response_placeholder.markdown(full_response)
+            st.session_state["messages"].append({"role": "assistant", "content": full_response})
 
     elif accion == "create_ticket":
         st.session_state["modo_ticket"] = True
+        # Aquí no hay placeholder externo → crea su propio mensaje
         manejar_ticket(user_input)
 
     else:
-        full_response = decision.get("userResponse", "")
-        mostrar_respuesta(full_response)
+        mostrar_respuesta(decision.get("userResponse", ""))
 
     st.session_state["ultimo_estado"] = f"Estado: {decision.get('status', '')}, Paso siguiente: {decision.get('nextStep', '')}"
 
