@@ -37,10 +37,9 @@ def validar_mensaje(texto):
         re.IGNORECASE
     )
     for pdv_match in pattern.findall(texto):
-        pdv_upper = pdv_match.upper()
-        if pdv_upper not in GLOSARIO["pdv_validos"]:
-            errores.append(f"Punto de venta {pdv_upper} no válido")
-        pdvs.append(pdv_upper)
+        if pdv_match not in GLOSARIO["pdv_validos"]:
+            errores.append(f"Punto de venta {pdv_match} no válido")
+        pdvs.append(pdv_match)
 
     incompleto_pattern = re.compile(
         r"\b(?:pdv|punto de venta)\b(?!\s+(?:de\s+)?[A-Za-z0-9]{2}\b)",
