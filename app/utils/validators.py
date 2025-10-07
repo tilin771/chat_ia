@@ -31,12 +31,23 @@ def validar_mensaje(texto):
 
     # PdV
     pdvs = []
-    pattern = re.compile(r"\b(?:pdv|punto de venta)\b[:\s\-]*([A-Za-z0-9]{2})\b", re.IGNORECASE)
+
+    pattern = re.compile(
+        r"\b(?:pdv|punto de venta)\b(?:\s+de)?[:\s\-]*([A-Za-z0-9]{2})\b",
+        re.IGNORECASE
+    )
     for pdv_match in pattern.findall(texto):
         pdv_upper = pdv_match.upper()
         if pdv_upper not in GLOSARIO["pdv_validos"]:
-            errores.append(f"Punto de venta {pdv_match} no válido")
+            errores.append(f"Punto de venta {pdv_upper} no válido")
         pdvs.append(pdv_upper)
+
+    incompleto_pattern = re.compile(
+        r"\b(?:pdv|punto de venta)\b(?!\s+(?:de\s+)?[A-Za-z0-9]{2}\b)",
+        re.IGNORECASE
+    )
+    for m in incompleto_pattern.finditer(texto):
+        errores.append("Se menciona 'punto de venta' pero no se especificó. Debes especificar el punto de venta para ayudarte de mejor manera")
 
     # Compatibilidades
     for regla in GLOSARIO["incompatibilidades"]:
