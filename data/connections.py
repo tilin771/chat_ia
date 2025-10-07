@@ -1,7 +1,7 @@
 import os
 import boto3
 
-KB_ID = "D1TTDMUGC6"
+KB_ID = "XXZNYWBVII"
 MODEL_ARN = "us.amazon.nova-pro-v1:0"
 REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
