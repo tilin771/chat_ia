@@ -158,10 +158,10 @@ def manejar_accion(decision, user_input):
         manejar_ticket(user_input)  # Esto crea su propio st.chat_message, limpio
         return
 
-    elif accion == "create_ticket":
+    elif accion in ("create_ticket", "query_tickets"):
         st.session_state["modo_ticket"] = True
         manejar_ticket(user_input)
-
+        
     else:
         full_response = decision.get("userResponse", "")
         mostrar_respuesta(full_response)
