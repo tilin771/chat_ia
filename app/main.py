@@ -63,12 +63,12 @@ def enviar_saludo_inicial():
         st.session_state["ia_inicializada"] = True
         session_id = st.session_state["session_id"]
 
-        saludo = run_supervisor("Hola", session_id)
+        saludo = run_supervisor("hola", session_id)
         try:
             saludo_json = json.loads(saludo)
             saludo_texto = saludo_json.get("userResponse", "")
         except json.JSONDecodeError:
-            saludo_texto = "¡Hola! Estoy aquí para ayudarte con Autoline. 😊"
+            saludo_texto = "¡Hola! Estoy aquí para ayudarte con Autoline. Me podrías decir tu código de usuario"
 
         st.session_state["messages"].append({"role": "assistant", "content": saludo_texto})
 
