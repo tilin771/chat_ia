@@ -29,13 +29,6 @@ def generar_contexto_kb(max_ultimos=5):
         contexto += f"{rol}: {msg['content']}\n"
     return contexto
 
-
-def load_system_prompt(file_path="./data/system_prompt.txt"):
-    """Carga el prompt del sistema desde un archivo"""
-    with open(file_path, "r", encoding="utf-8") as f:
-        return f.read()
-
-
 def inicializar_sesion():
     """Inicializa las variables de sesión de Streamlit"""
     if "messages" not in st.session_state:
@@ -206,7 +199,6 @@ def procesar_mensaje(user_input):
 # Código principal
 # ----------------------
 
-system_prompt = load_system_prompt()
 inicializar_sesion()
 enviar_saludo_inicial()
 
@@ -219,3 +211,4 @@ for message in st.session_state["messages"]:
 user_input = st.chat_input("Escribe tu consulta...")
 if user_input:
     procesar_mensaje(user_input)
+
